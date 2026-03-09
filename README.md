@@ -57,9 +57,13 @@ For comprehensive information regarding the analyses, see `reports/analysis_note
     │
     ├── config.py               <- Store useful variables and configuration
     │
-    ├── 01_acquire_tmdb_data    <- Scripts to download or generate data
+    ├── 01_acquire_tmdb_data    <- Scrapes raw horror data off TMDB w/ API
     │
-    ├── 02_load_tmdb_to_sql     <- Scripts to download or generate data
+    ├── 02_load_tmdb_to_sql     <- Cleans and loads raw TMDB data into SQL
+    │
+    ├── 03_imdb_to_csv          <- Converts IMDB TSV data into CSV format
+    │
+    ├── 04_merge_imdb_data      <- Normalizes IMDb data to TMDB schema; filters for Horror only; fuzzy-joins to produce clean datasets for SQL ingestion
     │
     └── plots.py                <- Code to create visualizations
 ```
@@ -118,7 +122,7 @@ SQL
 PowerBI
     Utilized to translate statistical findings into an interactive, industry-standard deliverable for non-technical stakeholders.
 Claude
-    Chosen because of rising AI skill value across tech. Used deliberately for assistive python script programming to accelerate workflow.
+    Used deliberately for assistive python scripting to accelerate workflow.
 GitHub
     Industry standard for project documentation and version history.
 
@@ -127,13 +131,13 @@ GitHub
 ## Project Status and Progression Notes
 
 O - Obtain (Data Acquisition)
-(Completed) acquire_data.py executed: 99,007 raw films collected via TMDB API.
-(Completed) Acquired relevant IMDb non-commercial datasets.
+(Completed) 01_acquire_tmdb_data.py: executed: 99,007 raw films collected via TMDB API.
+(Completed) Acquired relevant IMDb non-commercial datasets manually.
 (Pending) Identify and appropriate Rotten Tomatoes dataset on Kaggle or scraping feasibility.
 
 S - Scrub (Cleaning & Joining)
-(Completed) 02_load_to_sql.py: Deduplicated and reduced TMDB raw data to 12,734 clean films; created financial subset of 1,318 films with verified budget/revenue.
-(Pending) Integrate IMDb Non-Commercial Datasets.
+(Completed) 02_load_tmdb_to_sql.py: Deduplicated and reduced TMDB raw data to 12,734 clean films; created financial subset of 1,318 films with verified budget/revenue.
+(Completed) 03_imdb_to_csv.py: Converted IMDb TSVs into CSVs ; 04_merge_imdb_data.py: Cleaned and transformed raw IMDb CSVs into processed data ready for analysis. 
 (Pending) Integrate Rotten Tomatoes dataset.
 
 E - Explore (Exploratory Data Analysis)
