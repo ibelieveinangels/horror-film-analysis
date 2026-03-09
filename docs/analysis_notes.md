@@ -1,25 +1,28 @@
 ## Analysis Notes
 *Last updated: March 2026*
 
-# Current Assessment
+# Assessment Brief
 Horror is a highly profitable genre, particularly in the micro budget category, even when unicorns are removed.
 
 # Glossary
-1. Analysis Notes
-2. horror_films_clean
-    - Data Dictionary
-        Given that horror_financial is merely data with a financial data criteria - I found making a second dictionary redundant.
-    - Summary of Key Details
-3. horror_financial
-    - General
-    - Summary of Key Details
-4. Insight Layer
-    - Closed Questions
-        Questions that have been queried for with insightful findings
-    - Open Questions
-        Questions that remain inconclusive
 
------------------------------------------------------------------------------------------------------------------------------------------
+1. Analysis Notes
+2. TMDB
+    horror_films_clean
+        Data Dictionary
+        Summary of Key Details
+    horror_financial
+        General
+        Summary of Key Details
+3. IMDb
+    Data Quality Log
+4. Rotten Tomatoes
+    Data Quality Log
+5. Insight Layer
+    Closed Questions
+    Open Questions
+
+---
 
 ## horror_films_clean
 
@@ -32,6 +35,7 @@ id - primary key, self explanatory
 title - official release title of the films formatted in INITCAP
 
 release_date - release year, month, and day formatted in ISO 8601 (XXXX-XX-XX)
+
 popularity - upon first glance a float variable with no defined range, i.e. (Exit to Hell) 0.0136 - (Scream 7) 231.4379. Exit to Hell seems to be a relatively old movie, having been released in 2013 whilst Scream 7 should be considered “popular” under the context that it was only released 5 days ago as of March 4 2026. This trend follows the next two movies (Return to Silent Hill 2026-01-21 212.9702) and (28 Years Later: The Bone Temple 2026-01-14 98.1857) but discontinues with (Mouseboat Massacre 2025-05-09 80.3048) and follows with our first anomaly (The Faculty 1998-12-25 63.6252). I’m guessing “popularity” is a computed value but remains a mystery to me, we can assume that something must’ve come up that pushed up the relative popularity of The Faculty as an old movie. Cross-referencing on Google Trends is inconclusive.
 
 vote_average - The float average with a max of 10 and a min of 1.2 as per the db. Within TMDB you may rate a movie from 1 - 10.
@@ -59,19 +63,18 @@ spoken_languages - Two letter language code formatted in ISO 639-1 (en = english
 
 status - The status of the film, which should be “released” by default as per the clean data
 
+
 # Summary of Key Details — horror_films_clean
 
 **Streaming anomaly:** 
-Some films show budget but zero revenue due to 
-direct-to-streaming releases (e.g. Day Shift, Netflix 2022). These are 
-not theatrical failures — they require separate treatment in release 
-pattern analysis.
+Some films show budget but zero revenue due to direct-to-streaming releases (e.g. Day Shift, Netflix 2022). These are 
+not theatrical failures — they require separate treatment in release pattern analysis.
 
------------------------------------------------------------------------------------------------------------------------------------------
+---
 
 ## **General** - horror_financial
 
-Given its the cleanest data with, the following was queried for in SQLite:
+The following was queried for in SQLite:
 
 - ROI by budget tier
 - Best performing decades by average ROI
@@ -100,7 +103,61 @@ This means micro budget horror films are a low risk, high reward investment with
 only 6 films — Blair Witch distorting a tiny sample. Decade-level analysis 
 requires noting sample sizes alongside averages.
 
------------------------------------------------------------------------------------------------------------------------------------------
+---
+
+## IMDb — Data Quality Log
+No data quality issues identified during processing. 
+Pipeline ran cleanly via 04_merge_imdb_data.py; exact joins on tconst and title+year fuzzy fallback.
+
+---
+
+## Rotten Tomatoes — Data Quality Log
+
+# Issue 1 — Duplicate Records in rt_movies_clean
+**Problem identified:**
+Running a duplicate check on rt_movies_clean revealed 300+ titles appearing
+multiple times. Initially flagged by 28 Days Later returning NULL on the
+combined join despite being present in the table.
+
+**Analysis:**
+1. True duplicates — same title, same valid year (e.g. 28 Days Later 2003 x2).
+Caused by RT's concurrent scrape hitting the same page twice.
+2. Year=0 groupings — different films sharing a generic title
+(e.g. "Dracula", "Frankenstein", "Nightmare") with unparseable release dates,
+falsely appearing as duplicates due to failed date parsing.
+
+**Resolution:**
+Added drop_duplicates(subset=["title", "release_date_year"]) to
+process_rt_movies() in 05_process_rt_data.py before CSV export.
+This collapses true scrape dupes while leaving year=0 records intact —
+they remain in rt_movies_clean but never match on the title + year
+join condition, so they don't pollute analysis.
+
+## Issue 2 — Staggered International Releases Causing NULL Joins
+**Problem identified:**
+After deduplication, 28 Days Later continued returning NULL RT scores on the
+combined join. Confirmed present in rt_movies_clean with year 2003.
+
+**Analysis:**
+TMDB records 28 Days Later with a release_date of 2002-10-31 (UK theatrical
+release). RT records it as 2003 (US theatrical release). The title + year join
+condition fails because the year extracted from TMDB's date (2002) does not match
+RT's year (2003).
+This is not a data error in either source — both dates are correct within their
+own context. RT consistently uses US release dates whilst TMDB defaults to the
+earliest known release date, which for international films is often the country
+of origin.
+
+**Resolution:**
+No code fix applied. This is an expected limitation of a title+year join across
+sources with different release date conventions. Films with staggered international
+releases will systematically null out on the RT join. Known affected titles should
+be noted here as they are identified.
+
+Known affected titles:
+28 Days Later — UK 2002 (TMDB) vs US 2003 (RT)
+
+---
 
 ## Insight Layer
 

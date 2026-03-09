@@ -21,6 +21,10 @@ MODELS_DIR = PROJ_ROOT / "models"
 REPORTS_DIR = PROJ_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"
 
+# ── Rotten Tomatoes source files ──
+RT_MOVIES_PATH  = RAW_DATA_DIR / "rotten_tomatoes_movies.csv"
+RT_REVIEWS_PATH = RAW_DATA_DIR / "rotten_tomatoes_movie_reviews.csv"
+
 # ── IMDb source files ──
 IMDB_BASICS_PATH  = RAW_DATA_DIR / "title_basics.csv"
 IMDB_RATINGS_PATH = RAW_DATA_DIR / "title_ratings.csv"
