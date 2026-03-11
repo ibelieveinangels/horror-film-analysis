@@ -37,7 +37,8 @@ For comprehensive information regarding the analyses, see `reports/analysis_note
 │   └── raw            <- The original, immutable data dump
 │
 ├── docs               <- Documents
-│
+│   ├── analysis_notes.md      <- Comprehensive information regarding analysis process and methodology
+│   ├── mistakes.md            <- Information regarding mistakes, challenges, and insights learned throughout the project
 │
 ├── notebooks          <- Jupyter notebooks for EDA
 │
@@ -46,7 +47,6 @@ For comprehensive information regarding the analyses, see `reports/analysis_note
 ├── references         <- Data dictionaries, manuals, and all other explanatory materials
 │
 ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc
-│   ├── analysis_notes.md
 │   └── figures        <- Generated graphics and PowerBI dashboards (.pbix)
 │
 ├── requirements.txt   <- TThe requirements file for reproducing the analysis environment
@@ -198,11 +198,14 @@ O - Obtain (Data Acquisition)
 (Completed) Acquired relevant IMDb non-commercial datasets manually.
 (Completed) Identified an appropriate Rotten Tomatoes dataset on Kaggle.
 
-S - Scrub (Cleaning & Joining)
+S - Scrub (Cleaning, Joining, Normalizing)
 (Completed) 02_load_tmdb_to_sql.py: Deduplicated and reduced TMDB raw data to 12,734 clean films; created financial subset of 1,318 films with verified budget/revenue.
-(Completed) 03_imdb_to_csv.py: Converted IMDb TSVs into CSVs ; 04_merge_imdb_data.py: Cleaned and transformed raw IMDb CSVs into processed data ready for analysis. 
+(Completed) 03_imdb_to_csv.py: Converted IMDb TSVs into CSVs.
+    Note: script uses hardcoded paths; refactor to config.py standard pending.
+(Completed) 04_merge_imdb_data.py: Cleaned and transformed raw IMDb CSVs into processed data ready for analysis. 
 (Completed) 05_process_rt_data.py: Cleaned and transformed raw rt CSVs into processed data ready for analysis.
-(Completed) Successfully normalized and joined 6 cleaned datasets from 3 sources with diverging schemas.
+(Completed) 06_normalize_genres.py: Normalized genres across datasets; Fixed dataset compatibility issues.
+(Completed) Created a finalized view in the database (horror_combined) with computed factors like (roi, critic_audience_delta, release_month).
 
 E - Explore (Exploratory Data Analysis)
 (In Progress) Initial SQL exploration in SQLite (ROI by budget tier, decade performance).

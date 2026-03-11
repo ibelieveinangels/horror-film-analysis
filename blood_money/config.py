@@ -37,6 +37,9 @@ ERROR_LOG_PATH       = PROCESSED_DATA_DIR / "error_log.csv"
 FUZZY_REVIEW_PATH    = PROCESSED_DATA_DIR / "fuzzy_review.csv"
 INTEGRATION_LOG_PATH = PROCESSED_DATA_DIR / "data_integration.log"
 
+# ── Database ──
+DB_PATH = INTERIM_DATA_DIR / "horror_analysis.db"
+
 # ── Pipeline tuning ──
 FUZZY_THRESHOLD = 80      # Minimum rapidfuzz score to accept a fuzzy title match
 CHUNK_SIZE      = 10_000  # Rows per chunk when reading large files

@@ -122,7 +122,45 @@ def clean_box_office(value) -> float:
         return float(cleaned)
     except ValueError:
         return np.nan
+    
+def normalize_score(score) -> float:
+    """
+    Normalize heterogeneous RT critic score strings to 0-100 float.
+    Handles formats: 'A+', 'B-', '3.5/5', '7/10', '85', '4/4' etc.
+    Returns NaN if unparseable.
+    """
+    if pd.isna(score):
+        return np.nan
+    score = str(score).strip()
 
+    # Letter grades
+    grade_map = {
+        'A+': 100, 'A': 95, 'A-': 92,
+        'B+': 88, 'B': 85, 'B-': 82,
+        'C+': 78, 'C': 75, 'C-': 72,
+        'D+': 68, 'D': 65, 'D-': 62,
+        'F': 30
+    }
+    if score in grade_map:
+        return float(grade_map[score])
+
+    # Fraction formats: '3.5/5', '7/10', '4/4'
+    if '/' in score:
+        try:
+            num, denom = score.split('/')
+            return round(float(num.strip()) / float(denom.strip()) * 100, 1)
+        except:
+            return np.nan
+
+    # Plain numeric: '85', '7.5'
+    try:
+        val = float(re.sub(r'[^\d.]', '', score))
+        # If already on 0-100 scale
+        if val <= 100:
+            return val
+        return np.nan
+    except:
+        return np.nan
 
 def transform_genres(genre_string: str) -> tuple[list[dict], bool]:
     """
@@ -338,6 +376,8 @@ def process_rt_reviews(horror_ids: set) -> pd.DataFrame:
     # ── Type coercion ──
     df["is_top_critic"] = df["is_top_critic"].astype(bool)
     df["creation_date"] = pd.to_datetime(df["creation_date"], errors="coerce")
+
+    df["normalized_score"] = df["original_score"].apply(normalize_score)
 
     df = null_pad_to_schema(df, TARGET_REVIEWS_COLS)
     logger.info(f"RT reviews clean: {len(df):,} rows")
