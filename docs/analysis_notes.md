@@ -13,8 +13,8 @@ Horror is a highly profitable genre, particularly in the micro budget category, 
 **Pre-Analysis**
 
 1. TMDB
-    - horror_films_clean — Data Dictionary, Summary of Key Details
-    - horror_financial — General, Summary of Key Details
+    - horror_films_clean - Data Dictionary, Summary of Key Details
+    - horror_financial - General, Summary of Key Details
 2. IMDb - Data Quality Log
 3. Rotten Tomatoes - Data Quality Log
 
@@ -40,7 +40,7 @@ Horror is a highly profitable genre, particularly in the micro budget category, 
 
 ## 1. TMDB
 
-### Data Dictionary — horror_films_clean
+### Data Dictionary - horror_films_clean
 
 **Informal Column Rundown**
 
@@ -78,11 +78,11 @@ spoken_languages - Two letter language code formatted in ISO 639-1 (en = english
 status - The status of the film, which should be “released” by default as per the clean data
 
 
-### Summary of Key Details — horror_films_clean
+### Summary of Key Details - horror_films_clean
 
 **Streaming anomaly:** 
 Some films show budget but zero revenue due to direct-to-streaming releases (e.g. Day Shift, Netflix 2022). These are 
-not theatrical failures — they require separate treatment in release pattern analysis.
+not theatrical failures - they require separate treatment in release pattern analysis.
 
 ### **General** - horror_financial
 
@@ -92,9 +92,9 @@ The following was queried for in SQLite:
 - Best performing decades by average ROI
 - Top 20 highest ROI horror films ever
 - Does micro budget ROI hold across all decades or is it a modern phenomenon?
-- What is the ROI distribution within micro budget — is the average skewed by outliers?
+- What is the ROI distribution within micro budget - is the average skewed by outliers?
 
-### **Summary of Key Details** — horror_financial
+### **Summary of Key Details** - horror_financial
 
 **Core finding:** 
 Micro budget horror consistently outperforms all other 
@@ -112,14 +112,14 @@ This means micro budget horror films are a low risk, high reward investment with
 
 **Small sample caveat:** 
 1990s micro showing 69,396% avg ROI is based on 
-only 6 films — Blair Witch distorting a tiny sample. Decade-level analysis 
+only 6 films - Blair Witch distorting a tiny sample. Decade-level analysis 
 requires noting sample sizes alongside averages.
 
 ---
 
 ## 2. IMDb
 
-### IMDb — Data Quality Log
+### IMDb - Data Quality Log
 No data quality issues identified during processing. 
 Pipeline ran cleanly via 04_merge_imdb_data.py; exact joins on tconst and title+year fuzzy fallback.
 
@@ -127,29 +127,29 @@ Pipeline ran cleanly via 04_merge_imdb_data.py; exact joins on tconst and title+
 
 ## 3. Rotten Tomatoes
 
-### Rotten Tomatoes — Data Quality Log
+### Rotten Tomatoes - Data Quality Log
 
-#### Issue 1 — Duplicate Records in rt_movies_clean
+#### Issue 1 - Duplicate Records in rt_movies_clean
 **Problem identified:**
 Running a duplicate check on rt_movies_clean revealed 300+ titles appearing
 multiple times. Initially flagged by 28 Days Later returning NULL on the
 combined join despite being present in the table.
 
 **Analysis:**
-1. True duplicates — same title, same valid year (e.g. 28 Days Later 2003 x2).
+1. True duplicates - same title, same valid year (e.g. 28 Days Later 2003 x2).
 Caused by RT's concurrent scrape hitting the same page twice.
-2. Year=0 groupings — different films sharing a generic title
+2. Year=0 groupings - different films sharing a generic title
 (e.g. "Dracula", "Frankenstein", "Nightmare") with unparseable release dates,
 falsely appearing as duplicates due to failed date parsing.
 
 **Resolution:**
 Added drop_duplicates(subset=["title", "release_date_year"]) to
 process_rt_movies() in 05_process_rt_data.py before CSV export.
-This collapses true scrape dupes while leaving year=0 records intact —
+This collapses true scrape dupes while leaving year=0 records intact -
 they remain in rt_movies_clean but never match on the title + year
 join condition, so they don't pollute analysis.
 
-#### Issue 2 — Staggered International Releases Causing NULL Joins
+#### Issue 2 - Staggered International Releases Causing NULL Joins
 **Problem identified:**
 After deduplication, 28 Days Later continued returning NULL RT scores on the
 combined join. Confirmed present in rt_movies_clean with year 2003.
@@ -159,7 +159,7 @@ TMDB records 28 Days Later with a release_date of 2002-10-31 (UK theatrical
 release). RT records it as 2003 (US theatrical release). The title + year join
 condition fails because the year extracted from TMDB's date (2002) does not match
 RT's year (2003).
-This is not a data error in either source — both dates are correct within their
+This is not a data error in either source - both dates are correct within their
 own context. RT consistently uses US release dates whilst TMDB defaults to the
 earliest known release date, which for international films is often the country
 of origin.
@@ -171,7 +171,7 @@ releases will systematically null out on the RT join. Known affected titles shou
 be noted here as they are identified.
 
 Known affected titles:
-28 Days Later — UK 2002 (TMDB) vs US 2003 (RT)
+28 Days Later - UK 2002 (TMDB) vs US 2003 (RT)
 
 ---
 
@@ -185,13 +185,13 @@ on every query. `06_normalize_genres.py` explodes this into a clean long-format 
 where each row is one film-genre pair, enabling simple GROUP BY queries for all
 subgenre analysis.
 
-TV Movie (TMDB ID 10770) is excluded at the normalization stage — TV productions
+TV Movie (TMDB ID 10770) is excluded at the normalization stage - TV productions
 don't have theatrical box office and would skew financial and reception analysis.
 502 films carry this tag in horror_films_clean.
 
 ### normalized_score in rt_reviews_clean
 
-`original_score` in the raw RT reviews data is a heterogeneous string field —
+`original_score` in the raw RT reviews data is a heterogeneous string field -
 critics submit scores in their own format ("A+", "3.5/5", "7/10", "B-").
 `normalize_score()` was added to `05_process_rt_data.py` to convert all formats
 to a 0–100 float scale before CSV export. The `normalized_score` column is used
@@ -225,7 +225,7 @@ to Alien at 98% from hundreds of critics. 25 votes is a conservative floor that
 preserves foreign and independent horror while excluding truly unreviewed films.
 
 **tomatometer vs audience_score comparability:**
-These are not equivalent metrics. Tomatometer is a binary fresh/rotten percentage —
+These are not equivalent metrics. Tomatometer is a binary fresh/rotten percentage -
 each critic review is classified, not scored. Audience score is an average rating
 converted to a percentage. `critic_audience_delta` is directionally valid
 (positive = critics rate higher, negative = audiences rate higher) but
@@ -273,7 +273,7 @@ SELECT ... FROM film_genres
 
 ## 7. Insight Layer
 
-### Finance — Q1: The ROI Curve
+### Finance - Q1: The ROI Curve
 *← Average ROI % by budget tier (micro / low / mid / wide)*
 
 **Core assumption verdict: CONFIRMED**
@@ -283,31 +283,31 @@ than necessary in horror.
 
 **Core finding:**
 Micro budget avg ROI: 10,662% (raw) | 1,114% (excluding ROI > 10,000%).
-Both figures are the highest of any budget tier. Two films — Paranormal Activity
-and Blair Witch Project — are responsible for the extreme headline figure.
+Both figures are the highest of any budget tier. Two films - Paranormal Activity
+and Blair Witch Project - are responsible for the extreme headline figure.
 
 **Risk profile:**
 42 of 206 micro budget films (20%) lost money.
 65 of 206 (31%) exceeded 1,000% ROI.
-High variance, high ceiling — low risk entry point with highly variable return.
+High variance, high ceiling - low risk entry point with highly variable return.
 
 **Small sample caveat:**
-1990s micro avg ROI of 69,396% is based on only 6 films — Blair Witch
+1990s micro avg ROI of 69,396% is based on only 6 films - Blair Witch
 distorting a tiny sample. Decade-level analysis requires sample sizes
 noted alongside averages.
 
-#### Sub-finding — What separates the 65 winners from the 42 losers?
+#### Sub-finding - What separates the 65 winners from the 42 losers?
 
 **Primary findings:**
 Rating differential between winners and losers: 0.7 (negligible).
 Aesthetic quality is not a primary predictor of micro budget success.
-Largest differentiator: avg_vote_count — winners accumulate significantly
+Largest differentiator: avg_vote_count - winners accumulate significantly
 more audience engagement than losers.
 Runtime differential: 1 minute (irrelevant).
 
 **Causality caveat:**
 Vote count may reflect success rather than predict it. Wider distribution
-generates more ratings — not the reverse.
+generates more ratings - not the reverse.
 
 **Interpreted finding:**
 Micro budget horror winners and losers are nearly identical in quality,
@@ -319,26 +319,26 @@ that nobody sees.
 Blair Witch and Paranormal Activity were marketing phenomena. Blair Witch
 is among the earliest examples of ARG-style marketing with a fully
 interactive website. Anecdotal report from family: a subset of Mexican
-viewers initially believed Blair Witch was real found footage — plausible
+viewers initially believed Blair Witch was real found footage - plausible
 given that fact-checking on the internet was not normalized at the time
 of the 1999 release.
 
-#### Sub-finding — 1980s Wide Budget Anomaly (Manhunter)
+#### Sub-finding - 1980s Wide Budget Anomaly (Manhunter)
 
 **Finding:**
 The 1980s wide budget tier shows -94.25% avg ROI. This is not a data error.
 Michael Mann's Manhunter (1986) is the sole wide budget horror film from
-the 1980s in this dataset — $15M budget, $8.6M return.
+the 1980s in this dataset - $15M budget, $8.6M return.
 
 **Historical significance:**
 Manhunter introduced Hannibal Lecter to cinema. It was commercially and
 critically rejected on release. The IP seeded here became one of horror's
-most valuable franchises through Silence of the Lambs (1991) — a definitive
+most valuable franchises through Silence of the Lambs (1991) - a definitive
 case study in long-term IP value versus short-term theatrical performance.
 
 ---
 
-### Finance — Q2: Release Patterns
+### Finance - Q2: Release Patterns
 *← Average revenue and ROI by release month*
 
 **Core assumption verdict: REJECTED**
@@ -391,28 +391,149 @@ June and October emerge as the dual peak months.
 June: highest avg revenue ($52.1M), ROI 558.2%.
 October: highest volume (168 films), ROI 565.8% - essentially tied with June.
 Summer (June–August) consistently outperforms on revenue.
-November halo effect absent — 87 films, $30.5M avg revenue, ranks last on volume.
+November halo effect absent - 87 films, $30.5M avg revenue, ranks last on volume.
 
 ---
 
-### Reception — Q1: Critic vs. Audience Divergence
+### Reception - Q1: Critic vs. Audience Divergence
 *← Tomatometer vs. audience score delta by subgenre, crossed with revenue from horror_financial*
 
-*(Pending)*
+**Core assumption verdict: REJECTED**
+Critical consensus does not predict commercial performance in horror.
+Audience-preferred subgenres (Action, Adventure, Crime) outperform 
+critic-preferred subgenres on revenue. Drama is the sole exception.
 
-### Reception — Q2: The Top Critic Effect
+**Raw Findings (by Subgenre)**
+
+WITH VOTE COUNT > 25
+
+Horror overall (all films):
+| Genre | Films | Avg Tomatometer | Avg Audience Score | Avg Delta |
+|---|---|---|---|---|
+| Horror | 944 | 51.2 | 48.2 | +3.0 |
+
+| Genre | Films | Avg Tomatometer | Avg Audience Score | Avg Delta |
+|---|---|---|---|---|
+| Documentary | 1 | 71.0 | 39.0 | +32.0 |
+| Western | 5 | 63.4 | 37.6 | +25.8 |
+| History | 1 | 27.0 | 9.0 | +18.0 |
+| Drama | 140 | 62.2 | 55.5 | +6.7 |
+| Science Fiction | 146 | 55.3 | 48.7 | +6.6 |
+| Comedy | 116 | 58.0 | 54.3 | +3.7 |
+| Mystery | 194 | 52.2 | 50.3 | +1.9 |
+| War | 5 | 64.6 | 62.8 | +1.8 |
+| Crime | 35 | 56.4 | 54.8 | +1.6 |
+| Thriller | 428 | 47.3 | 46.5 | +0.9 |
+| Adventure | 20 | 54.8 | 54.7 | +0.1 |
+| Fantasy | 85 | 50.5 | 51.0 | -0.6 |
+| Romance | 22 | 57.0 | 57.8 | -0.8 |
+| Action | 70 | 40.9 | 49.1 | -8.3 |
+| Music | 6 | 56.0 | 64.7 | -8.7 |
+
+**Core insights:**
+Critics and general audiences broadly agree on horror - overall delta of
++3.0 across 944 films. Horror as a genre does not produce systematic
+critic-audience divergence at the macro level.
+
+Divergence is subgenre-specific:
+- Drama (+6.7) and Sci-Fi (+6.6) show the largest reliable critic premium
+  - critics reward craft and ambition in elevated horror subgenres.
+- Action (-8.3) shows the largest reliable audience premium - audiences
+  enjoy action-horror more than critics, consistent with a hypothesis that
+  critics penalize genre films perceived as prioritizing spectacle over craft.
+  However this cannot be confirmed from score data alone.
+- Thriller (428 films, delta +0.9) - the dominant co-genre - shows near
+  perfect critic-audience agreement, suggesting mainstream horror-thriller
+  is the most universally evaluated subgenre.
+
+**Sample Size Caveat**
+Documentary (1 film), Western (5), History (1), War (5) are statistically
+unreliable. Findings weighted toward high-volume subgenres:
+Thriller (428), Mystery (194), Sci-Fi (146), Drama (140), Comedy (116).
+
+**Raw Findings (by Subgenre with Financial Data)**
+
+| Genre | Films | Avg Delta | Avg Revenue | Avg ROI |
+|---|---|---|---|---|
+| Western | 1 | +17.0 | $475,846 | -73.6% |
+| War | 1 | +15.0 | $41,657,844 | 9.6% |
+| Drama | 66 | +2.6 | $53,026,053 | 278.5% |
+| Science Fiction | 90 | 0.0 | $49,606,569 | 438.5% |
+| Comedy | 56 | -0.2 | $28,268,802 | 229.4% |
+| Mystery | 120 | -2.1 | $70,264,399 | 4,068.4% |
+| Thriller | 233 | -4.1 | $58,481,209 | 844.4% |
+| Romance | 14 | -4.3 | $44,296,668 | 238.7% |
+| Adventure | 11 | -4.3 | $105,287,223 | 780.8% |
+| Fantasy | 45 | -6.0 | $54,417,702 | 197.6% |
+| Action | 47 | -12.1 | $84,011,570 | 146.7% |
+| Crime | 18 | -14.2 | $78,147,677 | 1,075.7% |
+| Music | 1 | -36.0 | $198,883 | -97.7% |
+
+Mystery ROI (4,068.4%) is unicorn-distorted by (Paranormal Activity, The Blair Witch Project, The Legend of Boggy Creek).
+
+#### Sub-finding - Documentary Anomaly (Wrinkles the Clown)
+
+**Documentary anomaly - Wrinkles the Clown (2019):**
+The sole documentary in the dataset. Tomatometer 68% vs audience score 36%, 
+delta of +32.0, the largest in the dataset. The divergence is explained
+by audience composition: a significant portion of audience reviewers
+watched the film due to social media virality rather than documentary
+interest, resulting in deflated audience scores from mismatched expectations.
+Illustrates how audience score can reflect distribution reach and viewer
+intent rather than film quality. Mirrors the Blair Witch marketing
+phenomenon observed in Finance Q1.
+
+Manual review of audience submissions reveals the score deflation
+is not a reflection of film quality. Submissions include: a review
+of Joker (wrong film entirely), a submission reading only "When is
+it coming out", duplicate reviews copy-pasted across accounts, and
+multiple reviewers explicitly stating they expected a horror film
+rather than a documentary. The 36% audience score is functionally
+invalid as a quality signal for this title.
+
+This is the most direct illustration in the dataset of why audience
+score requires critical interpretation - it measures engagement
+context as much as film reception.
+
+#### Sub-finding - Cult Film Anomaly (Repo! The Genetic Opera)
+
+**Music Anomaly - Repo! The Genetic Opera**
+Music anomaly. 37% tomatometer, 73% audience score, -36 delta. Cult horror musical with a deeply devoted 
+fanbase that critics largely dismissed. One film but a clean illustration of the cult film dynamic where 
+critical reception is essentially irrelevant to audience devotion.
+
+#### Interpreted Finding — Delta vs. Revenue
+Among financially documented films, audience-favored subgenres 
+dominate on revenue. Action (-12.1 delta, $84M avg revenue) and 
+Adventure (-4.3 delta, $105M avg revenue) are the two highest-earning 
+co-genres - both audience-preferred over critics. Crime (-14.2 delta) 
+shows the largest audience premium of any reliable sample and still 
+produces 1,075% avg ROI.
+
+Drama is the only subgenre where a critic premium (+2.6) coexists 
+with strong revenue ($53M) and solid ROI (278.5%), suggesting elevated 
+horror-drama is the one subgenre where critical approval and commercial 
+performance align.
+
+The data inverts the core assumption: audience preference, not critical 
+consensus, correlates with higher revenue in horror. Films audiences 
+enjoy more than critics earn more, not less.
+
+---
+
+### Reception - Q2: The Top Critic Effect
 *← Average normalized_score by is_top_critic, grouped by subgenre using rt_reviews_clean joined to rt_movies_clean*
 
 *(Pending)*
 
-### Reception — Q3: Distribution & Commercial Viability
+### Reception - Q3: Distribution & Commercial Viability
 *← Average ROI and revenue by distributor tier (major / mid / independent) by decade*
 
 *(Pending)*
 
 ---
 
-### Industry Trends — Q1: Subgenre Cycles
+### Industry Trends - Q1: Subgenre Cycles
 *← Horror film count by subgenre by decade overlaid with cultural_timeline.csv*
 
 **Baseline subgenre distribution (film_genres, Horror and TV Movie excluded):**
@@ -438,7 +559,7 @@ November halo effect absent — 87 films, $30.5M avg revenue, ranks last on volu
 | History | 56 | 0.3% |
 
 Total co-genre tag assignments: 29,791 across 12,734 films.
-Average co-genres per film: 2.38 — horror rarely operates as a pure single-genre product.
+Average co-genres per film: 2.38 - horror rarely operates as a pure single-genre product.
 
 Thriller dominates at 27.9% of co-genre tags, appearing alongside horror in 4,764 films.
 Top four co-genres (Thriller, Mystery, Drama, Sci-Fi) account for 62% of all co-genre assignments,
@@ -448,7 +569,7 @@ This distribution establishes the baseline against which decade-level subgenre s
 
 *(Decade-level analysis pending)*
 
-### Industry Trends — Q2: Production Geography
+### Industry Trends - Q2: Production Geography
 *← Tomatometer vs. audience score divergence by original_language and production_country*
 
 *(Pending)*

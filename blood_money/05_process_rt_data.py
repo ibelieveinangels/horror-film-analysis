@@ -72,9 +72,10 @@ TARGET_MOVIES_COLS = [
 TARGET_REVIEWS_COLS = [
     "rt_id", "review_id", "creation_date",
     "critic_name", "is_top_critic",
-    "original_score", "review_state",
-    "publication_name", "review_text",
-    "score_sentiment", "review_url",
+    "original_score", "normalized_score",
+    "review_state", "publication_name",
+    "review_text", "score_sentiment",
+    "review_url",
 ]
 
 
